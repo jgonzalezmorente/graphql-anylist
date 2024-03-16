@@ -5,20 +5,43 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { Module } from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
+import { JwtService } from '@nestjs/jwt';
 import { ItemsModule } from './items/items.module';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    GraphQLModule.forRoot<ApolloDriverConfig>({
-      driver: ApolloDriver,      
-      playground: false,      
-      autoSchemaFile: join( process.cwd(), 'src/schema.gql' ),
-      includeStacktraceInErrorResponses: true,
-      plugins: [
-        ApolloServerPluginLandingPageLocalDefault()
-      ]
+    GraphQLModule.forRootAsync({
+      driver: ApolloDriver,
+      imports: [ AuthModule ],
+      inject: [ JwtService ],
+      useFactory: async ( jwtService: JwtService ) => ({
+        playground: false,
+        autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+        plugins: [
+          ApolloServerPluginLandingPageLocalDefault()
+        ],
+        context({ req }) {
+          // const token = req.headers.authorization?.replace('Bearer ', '');
+          // if (!token) throw Error('Token needed');
+
+          // const payload = jwtService.decode( token );
+          // if (!payload) throw Error('Token not valid');
+        }
+      })
     }),
+    // ? Configuración básica
+    // GraphQLModule.forRoot<ApolloDriverConfig>({
+    //   driver: ApolloDriver,      
+    //   playground: false,
+    //   autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+    //   includeStacktraceInErrorResponses: true,
+    //   plugins: [
+    //     ApolloServerPluginLandingPageLocalDefault()
+    //   ]
+    // }),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST,
@@ -29,7 +52,9 @@ import { ItemsModule } from './items/items.module';
       synchronize: true, //* Sincroniza automaticamente el esquema de base de datos con los modelos de entidades. Evita gestionar manualmente las migraciones
       autoLoadEntities: true, //* Carga automáticamente todas las entidades eliminando la necesidad de listarlas manualmente
     }),    
-    ItemsModule,    
+    ItemsModule, 
+    UsersModule, 
+    AuthModule,    
   ],
   controllers: [],
   providers: [],
