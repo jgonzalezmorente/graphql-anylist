@@ -6,9 +6,8 @@ import { AuthResponse } from './types/auth-response.type';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
-import { ValidRoles } from './enums/valid-roles.enum';
 
-@Resolver( () => AuthResponse )
+@Resolver(() => AuthResponse)
 export class AuthResolver {
   constructor(
     private readonly authService: AuthService
