@@ -53,6 +53,16 @@ export class ItemsService {
     // TODO: soft delete, integridad referencial
     const item = await this.findOne( id, user );    
     await this.itemsRepository.remove( item );
-    return { ...item, id };    
+    return { ...item, id };
+  }
+
+  async itemCountByUser( user: User ): Promise<number> {
+    return this.itemsRepository.count({
+      where: {
+        user: {
+          id: user.id
+        }
+      }
+    });
   }
 }

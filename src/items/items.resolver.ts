@@ -17,9 +17,8 @@ export class ItemsResolver {
   async createItem(
     @Args('createItemInput') createItemInput: CreateItemInput,
     @CurrentUser() user: User
-  ): Promise<Item> {
-    console.log( user );
-    return this.itemsService.create(createItemInput, user );
+  ): Promise<Item> {    
+    return this.itemsService.create(createItemInput, user);
   }
 
   @Query( () => [Item], { name: 'items' } )
