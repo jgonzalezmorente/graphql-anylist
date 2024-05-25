@@ -14,7 +14,7 @@ import { Item } from './entities/item.entity';
   ],
   exports: [
     ItemsService,
-    TypeOrmModule
+    TypeOrmModule,
   ]
 })
 export class ItemsModule {}
