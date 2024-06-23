@@ -6,6 +6,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UpdateUserInput } from './dto/update-user.input';
 import { SignupInput } from '../auth/dto/inputs/signup.input';
 import { ValidRoles } from '../auth/enums/valid-roles.enum';
+import { PaginationArgs, SearchArgs } from '../common/dto/args';
 
 @Injectable()
 export class UsersService {
@@ -30,19 +31,36 @@ export class UsersService {
     }
   }
 
-  async findAll( roles: ValidRoles[] ): Promise<User[]> {
-    if ( roles.length === 0 ) return this.userRepository.find({
-      // ? No es necesario porque tenemos lazy en la propiedad lastUpdateBy
-      // relations: {
-      //   lastUpdateBy: true
-      // }
-    });
+  async findAll(roles: ValidRoles[], paginationArgs: PaginationArgs, searchArgs: SearchArgs): Promise<User[]> {
+    const { limit, offset } = paginationArgs;
+    const { search } = searchArgs;
+
+    const queryBuilder = this.userRepository.createQueryBuilder()
+      .take(limit)
+      .skip(offset);
     
-    return this.userRepository.createQueryBuilder()
-      .andWhere('ARRAY[roles] && ARRAY[:...roles]') //* Intersección del array de roles de la base de datos no vacía con el array de roles que le pasamos
-      .setParameter('roles', roles)
-      .getMany();
+    if (roles.length > 0) {
+      queryBuilder.andWhere('ARRAY[roles] && ARRAY[:...roles]', { roles })
     }
+
+    if (search) {
+      queryBuilder.andWhere(`LOWER("fullName") like :search or LOWER(email) like :search`, { search: `%${ search.toLowerCase() }%`})
+    }
+
+    return queryBuilder.getMany();
+
+    // if ( roles.length === 0 ) return this.userRepository.find({
+    //   // ? No es necesario porque tenemos lazy en la propiedad lastUpdateBy
+    //   // relations: {
+    //   //   lastUpdateBy: true
+    //   // }
+    // });
+    
+    // return this.userRepository.createQueryBuilder()
+    //   .andWhere('ARRAY[roles] && ARRAY[:...roles]') //* Intersección del array de roles de la base de datos no vacía con el array de roles que le pasamos
+    //   .setParameter('roles', roles)
+    //   .getMany();
+  }
 
   async findOne( id: string ): Promise<User> {
     throw new Error( 'findOne method not implemented' );
